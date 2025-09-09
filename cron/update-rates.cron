@@ -1,0 +1,7 @@
+# Cron job to update cryptocurrency exchange rates every 5 minutes
+# Add this line to your crontab using: crontab -e
+#
+# Format: minute hour day month day_of_week command
+# */5 * * * * cd /path/to/paybis-crypto-api && /usr/bin/php bin/console app:update-exchange-rates >> var/log/crypto-rates.log 2>&1
+
+*/5 * * * * cd /home/star/paybis-test/paybis-crypto-api && /usr/bin/php bin/console app:update-exchange-rates >> var/log/crypto-rates.log 2>&1

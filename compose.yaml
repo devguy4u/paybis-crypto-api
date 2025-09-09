@@ -1,0 +1,58 @@
+
+services:
+  # PHP Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+      - vendor:/var/www/html/vendor
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=mysql://crypto_user:crypto_pass@database:3306/paybis_crypto?serverVersion=8.0.32&charset=utf8mb4
+    depends_on:
+      database:
+        condition: service_healthy
+    command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+
+  # MySQL Database
+  database:
+    image: mysql:${MYSQL_VERSION:-8.0}
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-paybis_crypto}
+      MYSQL_USER: ${MYSQL_USER:-crypto_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-crypto_pass}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - database_data:/var/lib/mysql:rw
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+
+  # Cron service for scheduled tasks
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/var/www/html
+      - vendor:/var/www/html/vendor
+    environment:
+      - APP_ENV=prod
+      - DATABASE_URL=mysql://crypto_user:crypto_pass@database:3306/paybis_crypto?serverVersion=8.0.32&charset=utf8mb4
+    depends_on:
+      database:
+        condition: service_healthy
+    command: ["crond", "-f"]
+
+volumes:
+  database_data:
+  vendor:
