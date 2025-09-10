@@ -25,6 +25,7 @@ A Symfony-based web application that provides REST API endpoints for cryptocurre
 -   PHP 8.3+
 -   MySQL 8.0+
 -   Composer
+-   Symfony CLI (recommended for development)
 -   Docker & Docker Compose (optional)
 
 ## Installation
@@ -56,7 +57,48 @@ docker-compose exec app php bin/console doctrine:migrations:migrate
 curl http://localhost:8000/api/rates/pairs
 ```
 
-### Option 2: Manual Installation
+### Option 2: Advanced Development Setup (Recommended)
+
+1. **Install Symfony CLI:**
+
+```bash
+# Download and install Symfony CLI
+curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
+sudo apt install symfony-cli
+```
+
+2. **Quick setup with Composer scripts:**
+
+```bash
+# Install dependencies
+composer install
+
+# Configure environment
+cp .env .env.local
+# Edit .env.local with your database credentials
+
+# Complete setup (creates DB, runs migrations, fetches rates, starts server)
+composer setup
+```
+
+3. **Or step by step:**
+
+```bash
+# Create database
+composer db-create
+
+# Run migrations
+composer db-migrate
+
+# Fetch initial exchange rates
+composer update-rates
+
+# Start development server with Symfony CLI
+composer start
+# or manually: symfony serve --no-tls
+```
+
+### Option 3: Manual Installation (Traditional)
 
 1. Install dependencies:
 
@@ -82,13 +124,14 @@ php bin/console doctrine:migrations:migrate
 
 ```bash
 # Add to crontab (crontab -e):
-php bin/console app:update-exchange-rates >> /var/log/crypto-rates.log 2>&1
+*/5 * * * * cd /path/to/paybis-crypto-api && php bin/console app:update-exchange-rates >> var/log/crypto-rates.log 2>&1
 ```
 
 5. Start the development server:
 
 ```bash
 php -S localhost:8000 -t public
+# or with Symfony CLI: symfony serve --no-tls
 ```
 
 ## API Endpoints
@@ -190,9 +233,58 @@ GET /api/rates/pairs
 }
 ```
 
-## Commands
+## Development Commands
 
-### Update Exchange Rates
+### Composer Scripts (Recommended)
+
+```bash
+# Start development server
+composer start
+# or: composer dev
+
+# Stop development server
+composer stop
+
+# Update exchange rates
+composer update-rates
+
+# Update rates (dry run)
+composer update-rates-dry
+
+# Database operations
+composer db-create          # Create database
+composer db-migrate         # Run migrations
+composer db-reset           # Drop, create, and migrate
+
+# Testing
+composer test               # Run tests
+composer test-coverage      # Run tests with coverage
+
+# Utilities
+composer cache-clear        # Clear Symfony cache
+composer logs              # Tail development logs
+
+# Complete setup (for new installations)
+composer setup             # Creates DB, runs migrations, fetches rates, starts server
+```
+
+### Symfony CLI Commands
+
+```bash
+# Start development server with Symfony CLI
+symfony serve --no-tls
+
+# Stop server
+symfony server:stop
+
+# Check requirements
+symfony check:requirements
+
+# View server logs
+symfony server:log
+```
+
+### Traditional Console Commands
 
 ```bash
 # Update all pairs
@@ -203,6 +295,11 @@ php bin/console app:update-exchange-rates --pair=EUR/BTC
 
 # Dry run (don't save to database)
 php bin/console app:update-exchange-rates --dry-run
+
+# Database commands
+php bin/console doctrine:database:create
+php bin/console doctrine:migrations:migrate
+php bin/console cache:clear
 ```
 
 ## Configuration
